@@ -128,3 +128,33 @@ app.post('/control_actuator', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+app.post('/all_sensor_data', async (req, res) => {
+  try {
+    // รับข้อมูลจาก request body
+    const { temperature, humidity, soil_moisture, ldr, water_level } = req.body;
+
+    // ตรวจสอบว่าข้อมูลที่จำเป็นครบหรือไม่
+    if (temperature === undefined || humidity === undefined || soil_moisture === undefined || ldr === undefined || water_level === undefined) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // สร้างข้อมูลใหม่ในฐานข้อมูล
+    const newSensorReading = await prisma.sensorReading.create({
+      data: {
+        temperature,
+        humidity,
+        soil_moisture,
+        ldr,
+        water_level,
+        readingTime: new Date(), // บันทึกเวลาปัจจุบัน
+      },
+    });
+
+    // ส่งข้อมูลที่ถูกบันทึกกลับไป
+    res.status(201).json({ message: 'Sensor data stored successfully', newSensorReading });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
